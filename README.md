@@ -1,5 +1,5 @@
 # neural-dep-srl
-A simple neural model for dependency-based semantic role labeling
+This is the code for reproducing the experiments in the paper A Simple and Accurate Syntax-Agnostic Neural Model for Dependency-based Semantic Role Labeling.
 
 Dependencies
 -----------
@@ -22,4 +22,4 @@ Semantic role labeling training and testing
 
 The hyper-parameters on the scripts are the ones with which we obtained the best results.
 
-For any questions send us a mail at marcheggiani [at] uva [dot] nl or anton.phrolov [at] gmail [dot] com.
+For any question, send us a mail at marcheggiani [at] uva [dot] nl or anton-fr [at] yandex-team [dot] ru .
