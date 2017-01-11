@@ -1,5 +1,5 @@
 # neural-dep-srl
-This is the code for reproducing the experiments in the paper A Simple and Accurate Syntax-Agnostic Neural Model for Dependency-based Semantic Role Labeling.
+This is the code for reproducing the experiments in the paper [A Simple and Accurate Syntax-Agnostic Neural Model for Dependency-based Semantic Role Labeling](https://arxiv.org/abs/1701.02593).
 
 Dependencies
 -----------
