@@ -101,10 +101,32 @@ def make_bio_sample(data, frames):
                 pass
             return token
 
+        tmp_out_ = {}
+        dep_parse = []
+        degree = 0
+        for item in data[doc_id][sent_id]['d_parsing']:
+            label, tail, head = item
+            tail, head = tail[0], head[0]
+            dep_parse.append("%s|%s|%s" % (label, head, tail))
+
+            arc_2 = int(tail)-1
+            if arc_2 in tmp_out_:
+                tmp_out_[arc_2] += 1
+            else:
+                tmp_out_[arc_2] = 1
+            for i in tmp_out_:
+                if tmp_out_[i] > degree:
+                    degree = tmp_out_[i]
+
+
+
         sent = ' '.join([normalize(w) for w in sent])
         labels = ' '.join(labels)
         roles_voc = ' '.join(roles_voc)
         pos_tags = ' '.join(data[doc_id][sent_id]['pos'])
+        dep_parse = ' '.join(dep_parse)
+
+
         all_targets = []
         all_lemmas = []
         for a in data[doc_id][str(doc_id)]:
@@ -115,8 +137,9 @@ def make_bio_sample(data, frames):
         all_l = ' '.join(all_lemmas)
         all_t = ' '.join(all_targets)
 
-        print("#%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s" % (
-            dbg_header, sent, pos_tags, frame_name, target, all_l, all_t, roles_voc, labels))
+        print("#%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s" % (
+            dbg_header, sent, pos_tags, dep_parse, degree, frame_name, target, all_l, all_t, roles_voc, labels))
+
 
 
 def arg_parse():

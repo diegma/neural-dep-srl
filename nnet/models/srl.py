@@ -5,6 +5,8 @@ from nnet.models.model import Model
 from nnet.models.WordDropout import WordDropoutLayer, \
     ConditionedWordDropoutLayer
 
+from nnet.run.srl.read_dependency import _N_LABELS
+from nnet.models.GraphConvolutionalLayer import GraphConvLayer
 # np.set_printoptions(threshold=np.nan)
 _BIG_NUMBER = 10. ** 6.
 
@@ -32,6 +34,14 @@ class BioSRL(Model):
         labels_voc = input_batch(2, 'int32')
         labels_voc_mask = input_batch(2, 'float32')
 
+        adj_arcs_in = input_batch(2, 'int32')
+        adj_arcs_out = input_batch(2, 'int32')
+        adj_lab_in = input_batch(2, 'int32')
+        adj_lab_out = input_batch(2, 'int32')
+        mask_in = input_batch(2, 'float32')
+        mask_out = input_batch(2, 'float32')
+        mask_loop = input_batch(2, 'float32')
+
         labels = input_batch(2, 'int32')
 
         self.inputs = [
@@ -46,6 +56,10 @@ class BioSRL(Model):
             freq.input_var,
             region_mark.input_var,
             sent_pred_lemmas_idx.input_var,
+            adj_arcs_in.input_var, adj_arcs_out.input_var,
+            adj_lab_in.input_var, adj_lab_out.input_var,
+            mask_in.input_var, mask_out.input_var,
+            mask_loop.input_var,
             labels.input_var
         ]
 
@@ -133,6 +147,28 @@ class BioSRL(Model):
 
             bwd = recurrent_layer(**bwd_params)
             next_input = LL.ConcatLayer(incomings=[fwd, bwd], axis=2)
+
+        for i in range(hps['gc_layers']):
+            g_params = {
+                'incoming': next_input,
+                'num_units': hps['gcb_hdim'],
+                'arc_tensor_in': lo(adj_arcs_in),
+                'arc_tensor_out': lo(adj_arcs_out),
+                'label_tensor_in': lo(adj_lab_in),
+                'label_tensor_out': lo(adj_lab_out),
+                'mask_in': lo(mask_in),
+                'mask_out': lo(mask_out),
+                'mask_loop': lo(mask_loop),
+                'num_labels': _N_LABELS,
+                'batch_size': bsize,
+                'in_arcs': hps['in_arcs'],
+                'out_arcs': hps['out_arcs'],
+                'dropout': hps['gc_dropout'],
+                'mask_input': sent_mask,
+                'grad_clipping': 1,
+                'name': "graph_conv_%i" % i
+            }
+            next_input = GraphConvLayer(**g_params)
 
         # bidir.shape == (bsize, time, bidir_dim)
         # bidir = LL.ConcatLayer(incomings=[fwd, bwd], axis=2)

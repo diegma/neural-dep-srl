@@ -16,7 +16,6 @@ THEANO_FLAGS='device=gpu1' python3 -mnnet.run.srl.run \
 --rate 0.01 \
 --optimizer adam \
 --eval-dir ./data/ \
---word-dropout-prob 0.0 \
 --soft-warnings \
 --epochs 20 \
 --hps "{'rm':0}"

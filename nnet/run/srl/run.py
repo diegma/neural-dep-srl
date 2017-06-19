@@ -6,6 +6,7 @@ from nnet.run.srl.util import *
 from nnet.run.srl.decoder import *
 from functools import partial
 
+from nnet.run.srl.read_dependency import get_adj
 import nnet.run.srl.conll09_evaluation.eval
 
 
@@ -13,30 +14,32 @@ def make_local_voc(labels):
     return {i: label for i, label in enumerate(labels)}
 
 
-def bio_reader(word_dropout_prob, record):
-    dbg_header, sent, pos_tags, frame, target, f_lemmas, f_targets, labels_voc, labels = record.split(
+def bio_reader(record):
+    dbg_header, sent, pos_tags, dep_parsing, degree, frame, target, f_lemmas, f_targets, labels_voc, labels = record.split(
         '\t')
-    labels_voc = labels_voc.split()
+    labels_voc = labels_voc.split(' ')
 
     frame = [frame] * len(labels_voc)
     words = []
-    for word in sent.split():
-        if random.random() > word_dropout_prob:
-            words.append(word)
-        else:
-            words.append('_UNK')
+    for word in sent.split(' '):
+        words.append(word)
+        
 
-    pos_tags = pos_tags.split()
-    labels = labels.split()
+    pos_tags = pos_tags.split(' ')
+    labels = labels.split(' ')
 
     assert (len(words) == len(labels))
 
     local_voc = {v: k for k, v in make_local_voc(labels_voc).items()}
     labels = [local_voc[label] for label in labels]
 
-    f_lemmas = f_lemmas.split()
-    f_targets = f_targets.split()
-    return dbg_header, words, pos_tags, frame, \
+    dep_parsing = dep_parsing.split()
+    dep_parsing = [p.split('|') for p in dep_parsing]
+    dep_parsing = [(p[0], int(p[1]), int(p[2])) for p in dep_parsing]
+
+    f_lemmas = f_lemmas.split(' ')
+    f_targets = f_targets.split(' ')
+    return dbg_header, words, pos_tags, dep_parsing, np.int32(degree), frame, \
            np.int32(target), f_lemmas, np.int32(f_targets), labels_voc, labels
 
 
@@ -101,6 +104,8 @@ class BioSrlErrorComputer:
         labels_voc_mask, \
         freq, \
         region_mark, sent_pred_lemmas_idx, \
+        adj_arcs_in, adj_arcs_out, adj_lab_in, adj_lab_out, \
+        mask_in, mask_out, mask_loop, \
         true_labels \
             = model_input
 
@@ -204,20 +209,18 @@ class SRLRunner(Runner):
             "--eval-dir", help="path to dir with eval data and scripts",
             required=True
         )
-        parser.add_argument(
-            "--word-dropout-prob", required=False, default=0., type=float
-        )
 
 
     def get_parser(self):
-        return partial(bio_reader, self.a.word_dropout_prob)
+        return partial(bio_reader)
 
     def get_reader(self):
         return simple_reader
 
     def get_converter(self):
         def bio_converter(batch):
-            headers, sent_, pos_tags, frames, targets, f_lemmas, f_targets, labels_voc, labels = list(
+            headers, sent_, pos_tags, dep_parsing, degree, frames, \
+            targets, f_lemmas, f_targets, labels_voc, labels = list(
                 zip(*batch))
 
             sent = [self.word_voc.vocalize(w) for w in sent_]
@@ -232,6 +235,9 @@ class SRLRunner(Runner):
             labels_voc = [self.role_voc.vocalize(r) for r in labels_voc]
 
             lemmas_idx = [self.frame_voc.vocalize(f) for f in f_lemmas]
+
+            adj_arcs_in, adj_arcs_out, adj_lab_in, adj_lab_out, \
+            mask_in, mask_out, mask_loop = get_adj(dep_parsing, degree)
 
             sent_batch, sent_mask = mask_batch(sent)
             p_sent_batch, _ = mask_batch(p_sent)
@@ -272,6 +278,8 @@ class SRLRunner(Runner):
                    labels_voc_mask, freq_batch, \
                    region_mark, \
                    sent_pred_lemmas_idx,\
+                   adj_arcs_in, adj_arcs_out, adj_lab_in, adj_lab_out, \
+                   mask_in, mask_out, mask_loop, \
                    labels_batch
 
         return bio_converter
@@ -282,7 +290,7 @@ class SRLRunner(Runner):
             converter, self.a.test_only, self.a.data_partition,
             self.a.eval_dir)
         corpus = Corpus(
-            parser=partial(bio_reader, 0),
+            parser=partial(bio_reader),
             batch_size=self.a.batch,
             path=self.a.test,
             reader=self.get_reader()
@@ -298,6 +306,8 @@ class SRLRunner(Runner):
         hps['vbio'] = self.role_voc.size()
         hps['vpos'] = self.pos_voc.size()
         hps['word_embeddings'] = parse_word_embeddings(self.a.word_embeddings)
+        hps['in_arcs']=True
+        hps['out_arcs']=True
 
         return BioSRL(hps)
 

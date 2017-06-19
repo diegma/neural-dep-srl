@@ -15,11 +15,10 @@ THEANO_FLAGS='device=gpu0' python3 -mnnet.run.srl.run \
 --rate 0.01 \
 --optimizer adam \
 --eval-dir ./data/ \
---word-dropout-prob 0.0 \
 --soft-warnings \
 --epochs 15 \
 --out conll2009_rm0_pl_a.25_sskip_h512_d.0_l4 \
 --hps "{'id': 1, 'sent_edim': 100, 'sent_hdim': 512, \
-'frame_edim': 128, 'role_edim': 128, 'pos_edim': 16, 'rec_layers': 4, \
+'frame_edim': 128, 'role_edim': 128, 'pos_edim': 16, 'rec_layers': 4, 'gc_layers': 0, \
 'pos': True, 'rm':0, 'alpha': 0.25, \
 'p_lemmas':True}"

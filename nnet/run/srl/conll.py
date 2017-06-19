@@ -53,9 +53,9 @@ def from_2009(block, preserve_sense):
     block_frames, block_arguments, block_targets = [], [], []
     for line in block:
         parts = re.split("\t", line.strip())
-        # d_head = parts[0]
-        # d_tail = parts[9]
-        # d_label = parts[11]
+        d_head = parts[0]
+        d_tail = parts[9]
+        d_label = parts[11]
         word = parts[1]
         pos_tag = parts[5]
         if parts[13] != '_':
@@ -71,9 +71,9 @@ def from_2009(block, preserve_sense):
         record['tokenized_sentence'].append(word)
         record['pos'].append(pos_tag)
 
-        # record['d_parsing'].append([
-        #     'root', [int(d_tail), '_'], [int(d_head), word]
-        # ])
+        record['d_parsing'].append([
+            'root', [int(d_tail), '_'], [int(d_head), word]
+        ])
 
         arguments = parts[14:]
         for a in arguments:
