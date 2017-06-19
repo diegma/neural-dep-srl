@@ -159,7 +159,7 @@ class GraphConvLayer(MergeLayer):
             input_in_gate = T.dot(input_, self.W_in_gate)  # [b* t, h] * [h,h] = [b*t, h]
             first_in_gate = input_in_gate[self.arc_tensor_in[0] * seq_len + self.arc_tensor_in[1]]  # [b* t* 1, h]
             second_in_gate = self.V_in_gate[self.label_tensor_in[0]]
-            in_gate = (first_in_gate + second_in_gate).reshape((num_batch, seq_len, 1, 1))
+            in_gate = (first_in_gate + second_in_gate).reshape((num_batch, seq_len, 1))
 
             max_degree += 1
         if self.out_arcs:
@@ -177,7 +177,7 @@ class GraphConvLayer(MergeLayer):
             input_out_gate = T.dot(input_, self.W_out_gate)  # [b* t, h] * [h,h] = [b* t, h]
             first_out_gate = input_out_gate[self.arc_tensor_out[0] * seq_len + self.arc_tensor_out[1]]  # [b* t* mxdeg, h]
             second_out_gate = self.V_out_gate[self.label_tensor_out[0]]
-            out_gate = (first_out_gate + second_out_gate).reshape((num_batch, seq_len, degr, 1))
+            out_gate = (first_out_gate + second_out_gate).reshape((num_batch, seq_len, degr))
 
             
 
@@ -185,7 +185,7 @@ class GraphConvLayer(MergeLayer):
         # same_input = input.dimshuffle(0, 1, 'x', 2)
         same_input = T.tensordot(input, self.W_self_loop, axes=[2, 0]).dimshuffle(0, 1, 'x', 2)
 
-        same_input_gate = T.tensordot(input, self.W_self_loop_gate, axes=[2, 0]).dimshuffle(0, 1, 'x', 2)
+        same_input_gate = T.tensordot(input, self.W_self_loop_gate, axes=[2, 0]).reshape((num_batch, seq_len)).dimshuffle(0, 1, 'x')
 
 
         if self.in_arcs and self.out_arcs:
@@ -213,15 +213,9 @@ class GraphConvLayer(MergeLayer):
                                                max_degree))  # [h, b * t, mxdeg]
 
 
-
-        potentials_g = potentials_gate.dimshuffle(3, 0, 1, 2)  # [h, b, t, mxdeg]
-
-        potentials_resh_g = potentials_g.reshape((1,
-                                                  self.batch_size * seq_len,
+        potentials_r = potentials_gate.reshape((self.batch_size * seq_len,
                                                   max_degree))  # [h, b * t, mxdeg]
         # calculate the gate
-        potentials_sum = potentials_resh_g.sum(axis=0)  # [b * t, mxdeg]
-        potentials_r = potentials_sum.reshape((self.batch_size * seq_len, max_degree))  # [b * t, mxdeg]
         probs_det_ = T.nnet.sigmoid(potentials_r) * mask_soft  # [b * t, mxdeg]
         potentials_masked = potentials_resh * mask_soft * probs_det_  # [h, b * t, mxdeg]
 
