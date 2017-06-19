@@ -3,7 +3,7 @@ This is the code for used in the papers [A Simple and Accurate Syntax-Agnostic N
 
 Dependencies
 -----------
-- [python 3]
+- python 3
 - [theano 0.8.2](http://deeplearning.net/software/theano/)
 - [lasagne 0.1](http://lasagne.readthedocs.io/)
 
