@@ -24,6 +24,7 @@ To run the model the first thing to do is create a dataset and all the files nee
 Semantic role labeling training and testing
 --------------
 6a) To train the sintax agnostic model run scripts/train.sh
+
 6b) To train the model with the graph convolutional network over syntax run scripts/train_gcn.sh
 
 7) To test the trained model run scripts/test.sh
