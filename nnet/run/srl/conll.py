@@ -72,7 +72,7 @@ def from_2009(block, preserve_sense):
         record['pos'].append(pos_tag)
 
         record['d_parsing'].append([
-            'root', [int(d_tail), '_'], [int(d_head), word]
+            d_label, [int(d_tail), '_'], [int(d_head), word]
         ])
 
         arguments = parts[14:]
