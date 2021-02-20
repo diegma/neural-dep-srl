@@ -13,7 +13,7 @@ To run the model the first thing to do is create a dataset and all the files nee
 
 1) Place the CoNLL-2009 dataset files with the same format as in [here](https://ufal.mff.cuni.cz/conll2009-st/task-description.html) in data/conll2009/
 
-2) Place the embedding file [sskip.100.vectors](https://drive.google.com/file/d/0B8nESzOdPhLsdWF2S1Ayb1RkTXc/view?usp=sharing) in data/
+2) Place the embedding file [sskip.100.vectors](https://mega.nz/file/e1cCkbaD#fmv-tAeWi-nmu9Yst44dowFXlSD5RJKxvX7-m-yM05c) in data/
 
 3) Run scripts/srl_preproc.sh in order to obtain the preprocessed data you need for training and testing the model.
 
